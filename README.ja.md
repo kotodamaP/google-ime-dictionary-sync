@@ -10,8 +10,40 @@ Language:
 
 本体は CLI です。Computer Use は Google 日本語入力 UI を扱う任意補助であり、実際の辞書 import や置換の直前に必ずユーザー確認で止めます。
 
-短い紹介:
-Markdown の辞書シートを作り、Google 日本語入力へ取り込める TSV に変換し、必要なときだけ Codex Skill / Computer Use でローカル UI import を安全に補助するためのツールです。実辞書を勝手に変更する自動同期ツールではありません。
+### 目的
+
+難読語、固有名詞、プロジェクト用語、作品名、人名などを、毎回手で Google 日本語入力へ登録する手間を減らすことが目的です。用語を Markdown の辞書シートとして管理し、CLI で Google 日本語入力が読み込める TSV に変換します。
+
+### 利用シーン
+
+- 創作、研究、開発、サポート業務などで固有名詞の表記ゆれを減らしたい。
+- 複数の用語をまとめて Google 日本語入力へ登録したい。
+- 辞書データを Markdown / Git で管理し、変更履歴を残したい。
+- Codex Skill に辞書シートの追記、検証、取り込み準備を手伝わせたい。
+- Windows の Google 日本語入力 UI で TSV import を行うとき、Computer Use に監督付きで操作を補助させたい。
+
+### 利用用途
+
+- `--init-sheet` で辞書シートのひな形を作成。
+- Markdown 表から Google 日本語入力 TSV を生成。
+- `prepare` で前回 baseline と比較し、更新が必要か確認。
+- Google IME export と生成 TSV の merge 補助。
+- repo-local Codex Skill による辞書シート確認と、任意の Computer Use import 補助。
+
+### メリット
+
+- Markdown 表が入力元なので、人間がレビューしやすい。
+- strict validation により、読み、status、重複、TSV を壊す文字を早めに検出できる。
+- canonical TSV hash と build option hash により、変更なしのときは Google 日本語入力や Computer Use を開かずに済む。
+- 実辞書の変更前に TSV path、SHA256、backup path、予定操作を確認するため、誤操作を減らせる。
+- 外部 Python 依存なしで試せる。
+
+### 対象者
+
+- Google 日本語入力のユーザー辞書を安全にまとめて管理したい人。
+- 難読固有名詞や専門用語を多く扱う作家、翻訳者、研究者、開発者、サポート担当者。
+- Codex Skill / Computer Use を使って、ローカル UI 操作を監督付きで補助させたい人。
+- private な辞書データを公開せず、生成ルールとサンプルだけを再利用したい人。
 
 任意の Computer Use 補助:
 CLI で TSV を生成・検証したあと、Codex Skill が Google 日本語入力の設定画面を開き、ユーザー辞書へ TSV を取り込む操作を補助します。実際に辞書を変更する直前には、実行内容を表示し、ユーザーの明示確認を必須にします。
