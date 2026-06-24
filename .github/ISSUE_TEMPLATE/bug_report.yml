@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible bug without private dictionary data
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste private dictionary files, IME exports, screenshots, local paths, API keys, account data, customer names, or personal names.
+        Use synthetic sample data only.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Use synthetic input data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, and Google Japanese Input or Mozc version if relevant.

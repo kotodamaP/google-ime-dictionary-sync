@@ -1,0 +1,159 @@
+# google-ime-dictionary-sync
+
+Language:
+[日本語](README.ja.md) | [English](README.en.md) | [简体中文](README.zh-CN.md)
+
+<!-- section:overview -->
+## 概览
+
+`google-ime-dictionary-sync` 是一个 CLI，用于从小型 Markdown 术语表确定性地生成 Google Japanese Input TSV。它还提供 `prepare` 辅助命令，用于和上次记录的 baseline 比较，并附带一个可选的 Codex Skill 来辅助受监督的 UI 操作。
+
+CLI 是核心产品。Computer Use 只是可选辅助；在真正导入或替换用户词典前，必须在风险操作点立即取得用户明确确认。
+
+可选 Computer Use 辅助:
+CLI 生成并检查 TSV 后，Codex Skill 可以帮助用户打开 Google Japanese Input 设置界面，并通过 UI 导入 TSV。Skill 会显示计划操作，并在修改真实用户词典前要求明确确认。
+
+本项目并非 Google 官方项目，也未获得 Google 的认可、赞助或支持。Google Japanese Input 及相关名称属于各自权利人。
+
+<!-- section:features -->
+## 功能
+
+- 将 Markdown 表转换为 Google Japanese Input TSV。
+- 默认 strict 验证 status、reading、重复项和会破坏 TSV 的字符。
+- 使用 canonical TSV hash 和 build option hash 判断稳定的 `prepare unchanged`。
+- 合并导出的 IME TSV 时，可将导出的片假名读音规范化为平假名。
+- 在 `.agents/skills/google-ime-dictionary-sync` 中提供 repo-local Codex Skill。
+
+<!-- section:requirements -->
+## 要求
+
+- Python 3.10 或更新版本。
+- 如需导入 TSV，用户需要自行安装 Google Japanese Input。
+- 只有使用可选的受监督 UI 工作流时，才需要 Codex 和 Computer Use。
+
+支持范围:
+
+| 环境 | 支持 |
+|---|---|
+| Windows + Google Japanese Input | TSV 生成、prepare 流程、Windows-first 的受监督 UI 指南 |
+| macOS + Google Japanese Input | TSV 生成和手动导入文档；除非明确测试，否则不保证自动 UI 辅助 |
+| Linux + Mozc | 仅 TSV 生成；导入说明为 experimental |
+| Gboard Android/iOS | 不支持 |
+
+<!-- section:installation -->
+## 安装
+
+克隆本仓库并用 Python 运行脚本。不需要第三方 Python 依赖。
+
+```bash
+python scripts/build_dictionary.py --help
+python scripts/google_ime_dictionary_sync.py --help
+```
+
+可选的 Codex Skill 用户级安装:
+
+```bash
+mkdir -p "$HOME/.agents/skills"
+cp -R ./.agents/skills/google-ime-dictionary-sync "$HOME/.agents/skills/"
+```
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.agents\skills"
+Copy-Item -Recurse ".\.agents\skills\google-ime-dictionary-sync" "$HOME\.agents\skills\"
+```
+
+<!-- section:configuration -->
+## 配置
+
+构建 TSV 不需要配置文件。同步辅助 CLI 可以写入一个可选的本地配置:
+
+```bash
+python scripts/google_ime_dictionary_sync.py init-config \
+  --backup-root ./tmp/google-ime-runs \
+  --json
+```
+
+backup 和 run directory 应由用户选择。不要提交生成的 run directory、IME export、本地日志或私有词典文件。
+
+<!-- section:usage -->
+## 用法
+
+检查示例 TSV:
+
+```bash
+python scripts/build_dictionary.py \
+  --source examples/term-candidates.md \
+  --build-dir build \
+  --check
+```
+
+写入 TSV:
+
+```bash
+python scripts/build_dictionary.py \
+  --source examples/term-candidates.md \
+  --build-dir build
+```
+
+准备一次同步运行:
+
+```bash
+python scripts/google_ime_dictionary_sync.py prepare \
+  --source-md examples/term-candidates.md \
+  --backup-root ./tmp/google-ime-runs \
+  --json
+```
+
+如果 `prepare` 返回 `unchanged`，不要打开 Google Japanese Input，也不要启动 Computer Use。canonical TSV 和 build options 与 baseline 相同。
+
+典型流程:
+
+1. 编写 Markdown 术语表。
+2. 用 CLI 生成 Google Japanese Input TSV。
+3. 用 CLI 检查差异、backup path 和执行计划。
+4. 如有需要，用 Codex Skill / Computer Use 辅助 Google Japanese Input UI 操作。
+5. 在 import 前立即确认。
+6. 计划正确时才导入词典。
+
+更多信息见 [CLI reference](docs/cli-reference.md)、[input format](docs/input-format.zh-CN.md) 和 [privacy and safety](docs/privacy-and-safety.md)。
+
+<!-- section:troubleshooting -->
+## 故障排查
+
+- reading 无效: 默认只允许平假名。只有明确需要 `ー` 时才使用 `--allow-long-vowel-mark`。
+- 重复项: strict mode 会拒绝重复的 `読み + 正式表記`。只有想保留第一项并显示 warning 时才使用 `--lenient`。
+- 导入没有替换旧行: Google Japanese Input 的选中词典导入可能保留现有行。请使用专用词典，并在替换前导出备份。
+
+<!-- section:not-included -->
+## 不包含的内容
+
+- 不包含真实词典、IME export、backup evidence、screenshot 或 log。
+- 不包含 Google account、cloud、browser 或 mobile keyboard integration 自动化。
+- 不支持 Gboard Android/iOS。
+- 不保证 macOS UI automation；除非明确测试，否则仅提供手动导入说明。
+
+<!-- section:security-privacy -->
+## 安全 / 隐私
+
+如果文件会被分享，请不要在 `出典` 中写入 private URL、local path、account name、ticket ID、customer name 或 confidential source name。
+
+不要在 public issue 中粘贴 private dictionary file、IME export、screenshot、local path、API key、account data、customer name 或 personal name。
+
+Computer Use 可以操作 UI。请将范围限制在 Google Japanese Input，遇到意外画面内容时停止，并在修改真实词典前取得明确确认。
+
+<!-- section:license -->
+## 许可证
+
+MIT。见 [LICENSE](LICENSE)。
+
+<!-- section:attribution -->
+## 归属
+
+Google Japanese Input 及相关名称属于各自权利人。本项目是独立的非官方工具。
+
+<!-- section:disclaimer -->
+## 免责声明
+
+本工具按原样提供，不作任何保证。导入真实词典前，请检查生成的 TSV 并保留备份。

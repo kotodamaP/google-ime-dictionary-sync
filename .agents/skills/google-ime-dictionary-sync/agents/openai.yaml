@@ -1,0 +1,6 @@
+interface:
+  display_name: "Google IME Dictionary Sync"
+  short_description: "Build TSVs and safely assist Google Japanese Input import"
+  default_prompt: "Use $google-ime-dictionary-sync to build or review a Google Japanese Input TSV and assist import only after explicit confirmation."
+policy:
+  allow_implicit_invocation: true
