@@ -19,6 +19,10 @@ DISABLED_STATUSES = {"draft", "rejected", "hold", "private", "archived"}
 NORMALIZATION_VERSION = "1"
 DEFAULT_POS = "固有名詞"
 DEFAULT_OUTPUT_NAME = "google-ime-dictionary.tsv"
+DEFAULT_SHEET_TEMPLATE = """| 正式表記 | alias | 読み | memo | scope候補 | 出典 | status |
+|---|---|---|---|---|---|---|
+| 青空 | Blue Sky | あおぞら | Sample common phrase. | shared | public sample | candidate |
+"""
 
 
 class BuildError(Exception):
@@ -277,9 +281,19 @@ def write_outputs(result: BuildResult, build_dir: Path, output_name: str) -> Pat
     return output_path
 
 
+def init_sheet(path: Path, *, force: bool = False) -> Path:
+    if path.exists() and not force:
+        raise BuildError(f"dictionary sheet already exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(DEFAULT_SHEET_TEMPLATE, encoding="utf-8", newline="\n")
+    return path
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a Google Japanese Input TSV from a Markdown term table.")
-    parser.add_argument("--source", type=Path, required=True, help="Markdown term table path")
+    parser.add_argument("--source", type=Path, help="Markdown term table path")
+    parser.add_argument("--init-sheet", type=Path, help="write a starter Markdown dictionary sheet and exit")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing --init-sheet target")
     parser.add_argument("--build-dir", type=Path, default=Path("build"), help="directory for generated output")
     parser.add_argument("--output-name", default=DEFAULT_OUTPUT_NAME, help="generated TSV file name")
     parser.add_argument("--pos", default=DEFAULT_POS, help="Google Japanese Input part-of-speech label")
@@ -305,17 +319,26 @@ def payload_for(result: BuildResult, *, source: Path, output_path: Path | None, 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv if argv is not None else sys.argv[1:])
-    if "/" in args.output_name or "\\" in args.output_name:
-        print("[error] --output-name must be a file name, not a path", file=sys.stderr)
-        return 2
-    pos = normalize_field(args.pos)
-    options = BuildOptions(
-        pos=pos,
-        emit_aliases=args.emit_aliases,
-        allow_long_vowel_mark=args.allow_long_vowel_mark,
-        strict=not args.lenient,
-    )
     try:
+        if args.init_sheet is not None:
+            output_path = init_sheet(args.init_sheet, force=args.force)
+            if args.json:
+                print(json.dumps({"outputPath": str(output_path), "created": True}, ensure_ascii=False, indent=2))
+            else:
+                print(f"[ok] wrote dictionary sheet -> {output_path}")
+            return 0
+        if args.source is None:
+            raise BuildError("--source is required unless --init-sheet is used")
+        if "/" in args.output_name or "\\" in args.output_name:
+            print("[error] --output-name must be a file name, not a path", file=sys.stderr)
+            return 2
+        pos = normalize_field(args.pos)
+        options = BuildOptions(
+            pos=pos,
+            emit_aliases=args.emit_aliases,
+            allow_long_vowel_mark=args.allow_long_vowel_mark,
+            strict=not args.lenient,
+        )
         reject_unsafe_field(pos, label="--pos", line_number=0)
         result = build_from_file(args.source, options)
         output_path = None if args.check else write_outputs(result, args.build_dir, args.output_name)

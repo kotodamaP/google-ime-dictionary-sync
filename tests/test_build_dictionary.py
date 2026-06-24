@@ -150,6 +150,14 @@ class BuildDictionaryTests(unittest.TestCase):
                 2,
             )
 
+    def test_cli_init_sheet_writes_parseable_template(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "my-terms.md"
+            self.assertEqual(main(["--init-sheet", str(source)]), 0)
+            result = build_from_file(source, BuildOptions())
+            self.assertIn("あおぞら\t青空\t固有名詞\tSample common phrase.", result.canonical_tsv)
+            self.assertEqual(main(["--init-sheet", str(source)]), 2)
+
     def test_public_text_does_not_contain_private_project_terms(self) -> None:
         forbidden = [
             "Her" + "mesian",

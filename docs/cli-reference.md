@@ -2,12 +2,22 @@
 
 ## Build
 
+Create a starter Markdown dictionary sheet:
+
 ```bash
-python scripts/build_dictionary.py --source examples/term-candidates.md --build-dir build
+python scripts/build_dictionary.py --init-sheet my-terms.md
+```
+
+Then validate or build it:
+
+```bash
+python scripts/build_dictionary.py --source my-terms.md --build-dir build
 ```
 
 Important options:
 
+- `--init-sheet <path>`: write a starter Markdown dictionary sheet and exit.
+- `--force`: overwrite an existing `--init-sheet` target.
 - `--check`: validate and render in memory without writing.
 - `--pos 固有名詞`: set the Google Japanese Input part-of-speech label.
 - `--emit-aliases`: experimental, emit the whole alias cell as one extra surface form.
