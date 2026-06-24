@@ -18,7 +18,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from build_dictionary import BuildError, BuildOptions, build_from_file, normalize_field  # noqa: E402
+from build_dictionary import BuildError, BuildOptions, build_from_file, normalize_field, reject_unsafe_field  # noqa: E402
 
 
 APP_NAME = "google-ime-dictionary-sync"
@@ -97,8 +97,10 @@ def safe_name(value: str) -> str:
 
 
 def build_options_from_args(args: argparse.Namespace) -> BuildOptions:
+    pos = normalize_field(args.pos)
+    reject_unsafe_field(pos, label="--pos", line_number=0)
     return BuildOptions(
-        pos=normalize_field(args.pos),
+        pos=pos,
         emit_aliases=args.emit_aliases,
         allow_long_vowel_mark=args.allow_long_vowel_mark,
         strict=not args.lenient,

@@ -85,7 +85,8 @@ def normalize_field(value: str) -> str:
 
 def reject_unsafe_field(value: str, *, label: str, line_number: int) -> None:
     if "\t" in value or "\r" in value or "\n" in value:
-        raise BuildError(f"line {line_number}: {label} must not contain tabs or newlines")
+        location = f"line {line_number}" if line_number > 0 else "option"
+        raise BuildError(f"{location}: {label} must not contain tabs or newlines")
 
 
 def split_markdown_row(line: str) -> list[str]:
@@ -304,13 +305,18 @@ def payload_for(result: BuildResult, *, source: Path, output_path: Path | None, 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv if argv is not None else sys.argv[1:])
+    if "/" in args.output_name or "\\" in args.output_name:
+        print("[error] --output-name must be a file name, not a path", file=sys.stderr)
+        return 2
+    pos = normalize_field(args.pos)
     options = BuildOptions(
-        pos=normalize_field(args.pos),
+        pos=pos,
         emit_aliases=args.emit_aliases,
         allow_long_vowel_mark=args.allow_long_vowel_mark,
         strict=not args.lenient,
     )
     try:
+        reject_unsafe_field(pos, label="--pos", line_number=0)
         result = build_from_file(args.source, options)
         output_path = None if args.check else write_outputs(result, args.build_dir, args.output_name)
         payload = payload_for(result, source=args.source, output_path=output_path, options=options)

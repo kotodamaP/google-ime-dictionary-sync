@@ -9,7 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from build_dictionary import BuildError, BuildOptions, build_from_file, build_from_markdown  # noqa: E402
+from build_dictionary import BuildError, BuildOptions, build_from_file, build_from_markdown, main  # noqa: E402
 
 
 def table(rows: list[str], *, header: str | None = None, crlf: bool = False) -> str:
@@ -134,6 +134,41 @@ class BuildDictionaryTests(unittest.TestCase):
         markdown = table(["|  | Nanami | ななみ | memo | shared | sample | reviewed |"])
         with self.assertRaises(BuildError):
             build_from_markdown(markdown, BuildOptions())
+
+    def test_cli_pos_rejects_tab(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "terms.md"
+            source.write_text(table(["| 七海 | Nanami | ななみ | memo | shared | sample | reviewed |"]), encoding="utf-8")
+            self.assertEqual(main(["--source", str(source), "--build-dir", tmp, "--pos", "名\t詞", "--check"]), 2)
+
+    def test_cli_output_name_must_not_be_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "terms.md"
+            source.write_text(table(["| 七海 | Nanami | ななみ | memo | shared | sample | reviewed |"]), encoding="utf-8")
+            self.assertEqual(
+                main(["--source", str(source), "--build-dir", tmp, "--output-name", "nested/name.tsv"]),
+                2,
+            )
+
+    def test_public_text_does_not_contain_private_project_terms(self) -> None:
+        forbidden = [
+            "Her" + "mesian",
+            "Codex" + "Memory",
+            "C:" + "\\" + "Users",
+            "/Us" + "ers/",
+            "ir" + "oid",
+            "obsidian" + "Va" + "ult",
+            "Va" + "ult",
+            "Compute" + " Use",
+        ]
+        suffixes = {".md", ".py", ".yaml", ".yml", ".tsv"}
+        for path in ROOT.rglob("*"):
+            if ".git" in path.parts or "__pycache__" in path.parts:
+                continue
+            if path.is_file() and path.suffix in suffixes:
+                text = path.read_text(encoding="utf-8")
+                for word in forbidden:
+                    self.assertNotIn(word, text, f"{word!r} found in {path}")
 
 
 if __name__ == "__main__":

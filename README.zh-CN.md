@@ -117,6 +117,24 @@ python scripts/google_ime_dictionary_sync.py prepare \
 5. 在 import 前立即确认。
 6. 计划正确时才导入词典。
 
+### 使用 Codex / Computer Use 试用
+
+克隆此仓库后，在 repo root 启动 Codex。Codex 可以发现 repo-local Skill `.agents/skills/google-ime-dictionary-sync`。
+
+请先试用不会修改真实词典的检查流程:
+
+```text
+Use $google-ime-dictionary-sync to check examples/term-candidates.md and prepare a sync run. Do not open Google Japanese Input and do not modify any real dictionary.
+```
+
+如果想在 Windows 上试用受监督的 UI 辅助，请先确认 `prepare` 返回 `changed` 或 `no_previous_baseline`，并检查 candidate TSV path、SHA256 和 backup export path。然后这样请求:
+
+```text
+Use $google-ime-dictionary-sync to assist the Google Japanese Input import UI on Windows. Show the candidate TSV path, SHA256, target dictionary, backup export path, and planned action before import. Stop for my confirmation immediately before changing the real dictionary.
+```
+
+如果 `prepare` 返回 `unchanged`，不要打开 Google Japanese Input，也不要使用 Computer Use。
+
 更多信息见 [CLI reference](docs/cli-reference.md)、[input format](docs/input-format.zh-CN.md) 和 [privacy and safety](docs/privacy-and-safety.md)。
 
 <!-- section:troubleshooting -->

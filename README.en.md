@@ -117,6 +117,24 @@ Typical flow:
 5. Confirm immediately before import.
 6. Import into the dictionary only if the plan is correct.
 
+### Try With Codex / Computer Use
+
+After cloning this repository, start Codex from the repository root. Codex can discover the repo-local Skill at `.agents/skills/google-ime-dictionary-sync`.
+
+First try a no-mutation check:
+
+```text
+Use $google-ime-dictionary-sync to check examples/term-candidates.md and prepare a sync run. Do not open Google Japanese Input and do not modify any real dictionary.
+```
+
+To try supervised UI assistance on Windows, first confirm that `prepare` returned `changed` or `no_previous_baseline`, then review the candidate TSV path, SHA256, and backup export path. Then ask:
+
+```text
+Use $google-ime-dictionary-sync to assist the Google Japanese Input import UI on Windows. Show the candidate TSV path, SHA256, target dictionary, backup export path, and planned action before import. Stop for my confirmation immediately before changing the real dictionary.
+```
+
+If `prepare` returns `unchanged`, do not open Google Japanese Input and do not use Computer Use.
+
 See [CLI reference](docs/cli-reference.md), [input format](docs/input-format.en.md), and [privacy and safety](docs/privacy-and-safety.md).
 
 <!-- section:troubleshooting -->

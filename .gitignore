@@ -16,3 +16,23 @@ logs/
 tmp/
 *.local.tsv
 *.private.tsv
+
+# Generated sync/run manifests and evidence
+sync-run.json
+approval-request.md
+merge-export.json
+record-success.json
+automation-evidence.json
+computer-use-replacement-evidence.json
+
+# Generated IME artifacts
+google-ime-export-before-import.tsv
+google-ime-dictionary.tsv
+google-ime-dictionary.merged.tsv
+*.last-generated.tsv
+*.last-generated.json
+
+# Common local run roots
+runs/
+google-ime-runs/
+config.local.json
